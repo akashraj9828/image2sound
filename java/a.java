@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
 import java.nio.ByteBuffer;
 
 class a {
@@ -12,6 +13,7 @@ class a {
 	public static void main(String[] args) {
 		wav obj = new wav("out.wav");
 		obj.generate();
+		// obj.generateRawData();
 		print(obj);
 	}
 
@@ -35,7 +37,7 @@ class wav {
 	public String fileName;
 	public int SampleCount;
 
-	/*size offset endian*/
+	/* size offset endian */
 	// 4 0 big endian
 	public String ChunkID;
 	// 4 4 little endian
@@ -63,8 +65,7 @@ class wav {
 	// 4 40 little endian
 	public int SubChunk2Size;
 	// unlimited 44 little endian
-	public int[] RawData;
-	
+	public short[] RawData;
 
 	public wav(String a) {
 		this.fileName = a;
@@ -77,8 +78,8 @@ class wav {
 		this.SubChunk1Size = 16;
 		this.AudioFormat = 1;
 		this.NumChannels = 1;
-		this.SampleRate = 40;
-		this.BitsPerSample = 8*2;
+		this.SampleRate = 44100;
+		this.BitsPerSample = 8 * 2;
 		this.ByteRate = this.SampleRate * this.NumChannels * (this.BitsPerSample / 8);
 		this.BlockAlign = (short) (this.NumChannels * this.BitsPerSample / 8);
 		this.SubChunk2ID = "data";
@@ -107,7 +108,6 @@ class wav {
 					dos.writeByte(buffer1.get(i));
 				}
 
-
 				// big endian
 				dos.writeBytes(this.Format);
 				dos.writeBytes(this.SubChunk1ID);
@@ -127,10 +127,8 @@ class wav {
 					dos.writeByte(buffer2.get(i));
 				}
 
-
 				// big endian
 				dos.writeBytes(this.SubChunk2ID);
-
 
 				// little endian
 				ByteBuffer buffer3 = ByteBuffer.allocate(4);
@@ -142,20 +140,39 @@ class wav {
 
 				// little endian
 				int i = 0;
-				ByteBuffer buffer4 = ByteBuffer.allocate(this.SubChunk2Size * 8);
+				// int x=RawData.length;
+				// a.print("RawLen: "+x);
+				ByteBuffer buffer4 = ByteBuffer.allocate(RawData.length * 2);
 				buffer4.order(ByteOrder.LITTLE_ENDIAN);
+				a.print("Bufflen: " + buffer4.capacity());
 				for (i = 0; i < this.SampleCount; i++) {
 					// a.print(i*8);
-					buffer4.putInt(this.RawData[i]);
-					a.print(this.RawData[i]);
+					// buffer4.putInt(this.RawData[i]);
+					buffer4.putShort(this.RawData[i]);
+					// a.print(this.RawData[i]);
+					// dos.writeByte(buffer4.get(i * 4));
+					// a.print(this.RawData[i]+": "+ buffer4.get(i * 8)+" ,"+ buffer4.get(i * 8+1));
+					// a.print(this.RawData[i]+": "+ buffer4.get(i * 4)+" ,"+ buffer4.get(i *
+					// 4+1)+","+ buffer4.get(i * 4+2)+","+ buffer4.get(i * 4+3)+","+ buffer4.get(i *
+					// 4+4));
 					// dos.writeDouble(this.RawData[i]);
 				}
-					for (i = 0; i < buffer4.capacity(); i++) {
-						dos.writeByte(buffer4.get(i));
-					
-			
 
+				FileWriter fout = new FileWriter("out.log");
+				// int count = 0;
+				for (i = 0; i < buffer4.capacity(); i++) {
+					dos.writeByte(buffer4.get(i));
+					// if (i % 4 == 0) {
+					// count++;
+					// fout.write("\n" + count + ": ");
+					// } else {
+					// fout.write(buffer4.get(i) + ",");
 
+					// }
+					// fout.write(i+" "+buffer4.get(i*4) + "\n");
+
+				}
+				fout.close();
 
 			} catch (IOException exp) {
 				System.err.println("File output stream error : " + exp.getMessage());
@@ -165,42 +182,57 @@ class wav {
 			System.err.println("Creat new file error : " + exp.getMessage());
 		}
 	}
-
-	private void generateRawData() {
-		int frequency = 10, seconds = 1, amplitude = 10, i = 0;
+	//amp ramge 3000-
+	public void generateRawData() {
+		int frequency = 6000, seconds = 2, amplitude = 4000, i = 0;
+		// double omega = 2 * Math.PI * frequency;
 		int NumSamples = seconds * this.SampleRate;
 		this.SampleCount = NumSamples;
-		int cycles=frequency*seconds;
-		this.RawData = new int[NumSamples];
-		a.print("Cycle:: "+cycles);
-		a.print("Frequency:: "+frequency);
-		a.print("Amplitude:: "+amplitude);
-		a.print("Sampling rate:: "+SampleRate+"Hz");
-		a.print("byte/Sample :: "+(BitsPerSample/8)+"bytes");
+		double gap = (((double) (frequency) * (double) 360 / (double) 44100));
+		// a.print("gap: "+gap);
+		// a.print("gap: "+ );
+		int cycles = frequency * seconds;
+		RawData = new short[NumSamples];
+		a.print("Cycle:: " + cycles);
+		a.print("Frequency:: " + frequency);
+		a.print("Amplitude:: " + amplitude);
+		a.print("Sampling rate:: " + SampleRate + "Hz");
+		a.print("byte/Sample :: " + (BitsPerSample / 8) + "bytes");
 		try {
+			int count = 0;
 			// FileWriter fout=new FileWriter("out.log");
 			for (i = 0; i < NumSamples; i++) {
-				// this.RawData[i]=15.9; //10250
-				// if (i%5==0) {
-				// 	this.RawData[i]=amplitude*Math.sin(2*3.14*frequency); //10250
-				// }else if(i%3==0){
-				// 	this.RawData[i]=111.9; //10250
-				// }else{
-				// 	this.RawData[i]=-11.123123; //10250
-				// }
+				gap = (((double) (frequency) * (double) 360 / (double) 44100));
+				// double angle=omega*(SampleRate%(i+1));
+				// double angle =Math.toRadians(90);
+				double angle = Math.toRadians(gap * i);
 				// this.RawData[i] =(int)(amplitude*Math.sin(frequency * 2 * Math.PI ));
-				this.RawData[i] = (int) (amplitude * Math.sin(i));
+				// this.RawData[i] = (short) (((amplitude + (i * 1)) * Math.sin((angle))));
+				this.RawData[i] = (short) (amplitude * Math.sin((angle)));
+
+				if (i < SampleRate)
+					if ((RawData[i] < 0 && RawData[i - 1] > 0) || (RawData[i] > 0 && RawData[i - 1] < 0))
+						count++;
+
+				// a.print(
+				// "sin("
+				// +Math.toDegrees(angle)+") ="
+				// // +":sin(" +(angle) + ")="
+				// + Math.sin((angle)));
+
 				// System.out.println(this.RawData[i]);
+				// System.out.println(( amplitude*Math.sin((frequency * 2 * 3.14*i))));
+				// System.out.println((frequency * 2 * Math.PI)%180);
 				// fout.write(i+","+ this.RawData[i]+"\n");
 			}
 			// fout.close();
 			this.SubChunk2Size = NumSamples * this.NumChannels * (this.BitsPerSample / 8);
+			a.print("frequncy:::::::::::: " + count / (2));
 			// a.print(SubChunk2Size);
 			// this.SubChunk2Size=RawData.length*8;
 		} catch (NullPointerException exp) {
 			System.err.println("Raw data generation error : " + exp.getMessage());
-		}
-		 catch (Exception exp) {
+		} catch (Exception exp) {
 			System.err.println(exp.getMessage());
 		}
 	}

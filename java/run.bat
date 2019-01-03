@@ -7,4 +7,4 @@ javac a.java
 java a
 file out.wav
 
-REM out.wav
+out.wav

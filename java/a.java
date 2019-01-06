@@ -11,9 +11,9 @@ import java.nio.ByteBuffer;
 class a {
 
 	public static void main(String[] args) {
+		// print("5-255"+wav.map(5,1,10,1,100));
 		wav obj = new wav("out.wav");
 		obj.generate();
-		// obj.generateRawData();
 		print(obj);
 	}
 
@@ -22,10 +22,6 @@ class a {
 		print("*******");
 		print("p:" + o.ChunkSize);
 		print("f:" + f.length());
-		// print();
-		// print();
-		// print();
-		// print();
 	}
 
 	static void print(Object o) {
@@ -69,9 +65,8 @@ class wav {
 
 	public wav(String a) {
 		this.fileName = a;
-		// 0
+		
 		this.ChunkID = "RIFF";
-		// 4
 		this.ChunkSize = 0;
 		this.Format = "WAVE";
 		this.SubChunk1ID = "fmt ";
@@ -140,39 +135,20 @@ class wav {
 
 				// little endian
 				int i = 0;
-				// int x=RawData.length;
-				// a.print("RawLen: "+x);
 				ByteBuffer buffer4 = ByteBuffer.allocate(RawData.length * 2);
 				buffer4.order(ByteOrder.LITTLE_ENDIAN);
 				a.print("Bufflen: " + buffer4.capacity());
 				for (i = 0; i < this.SampleCount; i++) {
-					// a.print(i*8);
-					// buffer4.putInt(this.RawData[i]);
 					buffer4.putShort(this.RawData[i]);
 					// a.print(this.RawData[i]);
-					// dos.writeByte(buffer4.get(i * 4));
-					// a.print(this.RawData[i]+": "+ buffer4.get(i * 8)+" ,"+ buffer4.get(i * 8+1));
-					// a.print(this.RawData[i]+": "+ buffer4.get(i * 4)+" ,"+ buffer4.get(i *
-					// 4+1)+","+ buffer4.get(i * 4+2)+","+ buffer4.get(i * 4+3)+","+ buffer4.get(i *
-					// 4+4));
-					// dos.writeDouble(this.RawData[i]);
 				}
 
-				FileWriter fout = new FileWriter("out.log");
+				// FileWriter fout = new FileWriter("out.log");
 				// int count = 0;
 				for (i = 0; i < buffer4.capacity(); i++) {
 					dos.writeByte(buffer4.get(i));
-					// if (i % 4 == 0) {
-					// count++;
-					// fout.write("\n" + count + ": ");
-					// } else {
-					// fout.write(buffer4.get(i) + ",");
-
-					// }
-					// fout.write(i+" "+buffer4.get(i*4) + "\n");
-
 				}
-				fout.close();
+				// fout.close();
 
 			} catch (IOException exp) {
 				System.err.println("File output stream error : " + exp.getMessage());
@@ -182,15 +158,14 @@ class wav {
 			System.err.println("Creat new file error : " + exp.getMessage());
 		}
 	}
-	//amp ramge 3000-
+	//amp ramge 32767 - -32767
 	public void generateRawData() {
-		int frequency = 6000, seconds = 2, amplitude = 4000, i = 0;
+		int frequency = 10000, seconds = 1, amplitude = 32767, i = 0;
 		// double omega = 2 * Math.PI * frequency;
 		int NumSamples = seconds * this.SampleRate;
 		this.SampleCount = NumSamples;
-		double gap = (((double) (frequency) * (double) 360 / (double) 44100));
+		double gap = (((double) (frequency) * (double) 360 / (double) SampleRate));
 		// a.print("gap: "+gap);
-		// a.print("gap: "+ );
 		int cycles = frequency * seconds;
 		RawData = new short[NumSamples];
 		a.print("Cycle:: " + cycles);
@@ -200,15 +175,21 @@ class wav {
 		a.print("byte/Sample :: " + (BitsPerSample / 8) + "bytes");
 		try {
 			int count = 0;
+				// this.RawData[0] = (short)32760;
+				// this.RawData[1] = (short)-32767;
+				// this.RawData[2] = (short)30000;
+				// this.RawData[3] = (short)-20000;
+				// this.RawData[4] = (short)10000;
+			
 			// FileWriter fout=new FileWriter("out.log");
 			for (i = 0; i < NumSamples; i++) {
-				gap = (((double) (frequency) * (double) 360 / (double) 44100));
-				// double angle=omega*(SampleRate%(i+1));
-				// double angle =Math.toRadians(90);
+				// gap = (((double) (frequency+i*0.2) * (double) 360 / (double) SampleRate));
+				// // double angle=omega*(SampleRate%(i+1));
+				// // double angle =Math.toRadians(90);
 				double angle = Math.toRadians(gap * i);
-				// this.RawData[i] =(int)(amplitude*Math.sin(frequency * 2 * Math.PI ));
-				// this.RawData[i] = (short) (((amplitude + (i * 1)) * Math.sin((angle))));
 				this.RawData[i] = (short) (amplitude * Math.sin((angle)));
+				// this.RawData[i] =(int)(amplitude*Math.sin(frequency * 2 * Math.PI ));
+				// // this.RawData[i] = (short) (((amplitude + (i * 1)) * Math.sin((angle))));
 
 				if (i < SampleRate)
 					if ((RawData[i] < 0 && RawData[i - 1] > 0) || (RawData[i] > 0 && RawData[i - 1] < 0))
@@ -220,14 +201,14 @@ class wav {
 				// // +":sin(" +(angle) + ")="
 				// + Math.sin((angle)));
 
-				// System.out.println(this.RawData[i]);
+				// System.out.println(i+": "+this.RawData[i]);
 				// System.out.println(( amplitude*Math.sin((frequency * 2 * 3.14*i))));
 				// System.out.println((frequency * 2 * Math.PI)%180);
 				// fout.write(i+","+ this.RawData[i]+"\n");
 			}
 			// fout.close();
 			this.SubChunk2Size = NumSamples * this.NumChannels * (this.BitsPerSample / 8);
-			a.print("frequncy:::::::::::: " + count / (2));
+			// a.print("frequncy:::::::::::: " + count / (2));
 			// a.print(SubChunk2Size);
 			// this.SubChunk2Size=RawData.length*8;
 		} catch (NullPointerException exp) {
@@ -235,5 +216,10 @@ class wav {
 		} catch (Exception exp) {
 			System.err.println(exp.getMessage());
 		}
+	}
+
+	public static double map(double n,double  start1,double  stop1,double  start2,double  stop2) {
+		double val=((n - start1) / (stop1 - start1)) * (stop2 - start2) + start2;
+		return val;
 	}
 }

@@ -1,18 +1,18 @@
     // var context = new AudioContext();
   
 //debug
-var log_br=false;
+var log_br=true;
 
 var canvas = document.createElement('canvas');
 canvas.setAttribute("id", "can");
-canvas.height = 105;
-canvas.width = 105;
+canvas.height = 1000;
+canvas.width = 1000;
 $("#container").append(canvas);
 
 
 //Loading of the home test image - img1
 var img1 = new Image();
-img1.src = 'test3.png';
+img1.src = 'temp.jpg';
 
 //brighness array
 var br = [];
@@ -39,7 +39,7 @@ init();
 
 function init() {
     loadImg();
-    start_audio();
+    // start_audio();
 }
 
 function start_audio() {
@@ -92,8 +92,9 @@ function calc_bri() {
         }
         br[i] = temp;
     }
-    if(log_br)
-    console.table(br);
+    // if(log_br)
+    // console.table(br);
+    print();
 
 }
 
@@ -117,20 +118,39 @@ function play1(freq, amp) {
     osc.stop(audioCtx.currentTime + 0.1);
 }
 
+// function print() { //prints array of brightness
+//     var ar = "var ar={";
+//     for (i = 0; i < img1.width; i++) {
+//         ar += "{"
+//         for (j = 0; j < img1.height; j++) {
+//             ar += br[i][j];
+//             if (j < img1.height - 1)
+//                 ar += ","
+//         }
+//         ar += "}"
+//         if (i < img1.width - 1)
+//             ar += ",\n"
+//     }
+//     ar += "}"
+
+//     $("body").append(ar)
+
+//     console.log(ar)
+// }
 function print() { //prints array of brightness
-    var ar = "var ar={";
+    var ar = "\n";
     for (i = 0; i < img1.width; i++) {
-        ar += "{"
+        ar += ""
         for (j = 0; j < img1.height; j++) {
             ar += br[i][j];
             if (j < img1.height - 1)
                 ar += ","
         }
-        ar += "}"
+        ar += "\n"
         if (i < img1.width - 1)
-            ar += ",\n"
+            ar += ""
     }
-    ar += "}"
+    ar += "\n"
 
     $("body").append(ar)
 

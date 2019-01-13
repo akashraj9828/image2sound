@@ -10,6 +10,6 @@ java -Xmx1024m img2sound
 REM java -Xmx1024m -Xprof -Xloggc:gc.txt img2sound
 REM java -Xmx1000m -Xss1000m -Xprof -Xloggc:gc.txt  img2sound
 REM java -Xmx1000m -Xss1000m -Xprof -Xloggc:gc.txt  img2sound
-file out.wav
+REM file out.wav
 
 REM out.wav

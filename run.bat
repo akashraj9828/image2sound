@@ -6,7 +6,7 @@ del img2sound.class
 REM del out.wav
 javac img2sound.java
 
-java -Xmx1024m img2sound
+java -Xmx1024m img2sound %1
 REM java -Xmx1024m -Xprof -Xloggc:gc.txt img2sound
 REM java -Xmx1000m -Xss1000m -Xprof -Xloggc:gc.txt  img2sound
 REM java -Xmx1000m -Xss1000m -Xprof -Xloggc:gc.txt  img2sound

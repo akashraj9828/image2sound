@@ -1,1 +1,5 @@
-.class
+*.class
+*.wav
+*.png
+test*
+out*

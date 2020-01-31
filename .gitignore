@@ -1,0 +1,8 @@
+*.class
+*.wav
+*.png
+test*
+out*
+temp*
+.vs*
+.gitignore

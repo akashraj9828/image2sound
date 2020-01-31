@@ -1,39 +1,72 @@
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
+
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
 
-import javafx.scene.paint.Color;
-// import sun.security.ec.ECDSASignature.Raw;
+import java.lang.Math;
 
 import java.util.*;
-import java.text.DecimalFormat;
-
-import java.lang.Math;
 
 class img2sound {
 
-    public static void main(String[] args) {
+    public static String img_name;
+    public static String audio_name;
+    public static int duration = 5;
+    public static int factor = 4;
 
-        print(args[1]);
+    public static void main(String[] args) {
+        parseArgs(args);
+        // print(args[1]);
         // wav obj = new wav("temp.png", "out.wav");
-        wav obj = new wav(args[0] + ".png", args[0] + ".wav",Integer.parseInt(args[1]));
+        wav obj = new wav(img_name, audio_name, duration, factor);
         obj.init();
+    }
+
+    public static void parseArgs(String[] args) {
+        int len = args.length;
+        // print(len+"-------");
+        // print(args[0]+"\t"+args[1]+"\t"+args[2]+"\t");
+        if (len == 0) {
+            showHelp();
+        }
+        if (len == 1) {
+            if (args[0].equals("-h") || args[0].equals("--h") || args[0].equals("?") || args[0].equals("-help")
+                    || args[0].equals("help")) {
+                showHelp();
+            }
+        }
+        try {
+            if (len >2) {
+                factor = Integer.parseInt(args[2]);
+            }
+            if (len > 1) {
+                duration = Integer.parseInt(args[1]);
+            }
+            if (len > 0) {
+                img_name = args[0];
+                audio_name = args[0].substring(0, args[0].lastIndexOf('.'))+"_" +duration+"s_density-"+factor+ ".wav";
+            }
+        } catch (Exception e) {
+            showHelp();
+        }
+    }
+
+    public static void showHelp() {
+
+        print("\n\n \t Usage: java  img2sound [image name] [seconds] [Density]");
+        print("\t");
+        print("\t [image name] png and jpeg supported");
+        print("\t [seconds] Default 5, Output audio file length in seconds");
+        print("\t [Density] Default 4, Small numbers make image pixel narrower and sharpen. But, processing takes a long time.");
+        print("\t [?,-h,--h,-help,help] To display this help screen");
+
+        System.exit(0);
     }
 
     static void print(Object o) {
@@ -82,12 +115,11 @@ class wav {
     public static short[] RawData;
     /**************************************/
 
-    // every value here is modified later
-    public static int seconds, amplitude, minFreq = 0, maxFreq = 21000, freqGap;
-    //
+    // user parmaeters
     public static int durationSeconds = 1;
+    public static int Factor = 1;
 
-    public wav(String imgfile, String wavfile,int seconds) {
+    public wav(String imgfile, String wavfile, int seconds, int factor) {
         imgFileName = imgfile;
         fileName = wavfile;
         ChunkID = "RIFF"; // don't change
@@ -104,11 +136,13 @@ class wav {
         SubChunk2ID = "data"; // don't change
         SubChunk2Size = 0;
 
-
-        durationSeconds=seconds;
+        durationSeconds = seconds;
+        Factor = factor;
     }
 
     public void init() {
+        print("Input: "+imgFileName);
+        print("Output: "+fileName);
         processImage();
 
     }
@@ -120,7 +154,7 @@ class wav {
     }
 
     public static void processImage() {
-        int x,y;
+        int x, y;
 
         try {
 
@@ -132,15 +166,15 @@ class wav {
 
             // int durationSeconds = 1;
             double maxSpecFreq = 20000;
-            int Factor = 1;
+            // int Factor = 1;
 
             double maxFreq = 0;
             int sampleRate = 44100;
             int channels = 1;
             int numSamples = (int) (sampleRate * durationSeconds);
-            int samplesPerPixel = (int)Math.ceil(numSamples / width)+1 ;
+            int samplesPerPixel = (int) Math.ceil(numSamples / width) + 1;
 
-            int C = (int)(maxSpecFreq / height) +1; //freqncy per row
+            int C = (int) (maxSpecFreq / height) + 1; // freqncy per row
             float yFactor = Factor;
 
             short tmpData[] = new short[numSamples];
@@ -159,33 +193,30 @@ class wav {
             print("samplesPerPixel: " + samplesPerPixel);
             print("C: " + C);
             print("yFactor: " + yFactor);
-            
 
-            
             // loop stats
             print("out loop x: " + numSamples);
-            print("out loop pixel_x: " + (int) Math.floor(numSamples/samplesPerPixel));
+            print("out loop pixel_x: " + (int) Math.floor(numSamples / samplesPerPixel));
             print("in loop y: " + height);
 
             // int x,y;
-            for ( x = 0; x < numSamples; x++) {
+            for (x = 0; x < numSamples; x++) {
                 double rez = 0;
-                int pixel_x =(int) Math.floor(x / samplesPerPixel);
+                int pixel_x = (int) Math.floor(x / samplesPerPixel);
 
                 if (x % sampleRate == 0) {
                     print("progress" + (x / sampleRate + 1) + '/' + durationSeconds);
                     print(pixel_x);
                 }
 
-
-                for ( y = 0; y < height; y += yFactor) {
+                for (y = 0; y < height; y += yFactor) {
                     int color = img.getRGB(pixel_x, y);
                     double b = color & 0xff;
                     double g = (color & 0xff00) >> 8;
                     double r = (color & 0xff0000) >> 16;
 
                     double s = r + b + g;
-                    double volume = s / 765*100;
+                    double volume = s / 765 * 100;
 
                     double freq = Math.round(C * (height - y + 1));
                     rez += Math.floor(volume * Math.cos(freq * 6.28 * x / sampleRate));
@@ -193,7 +224,7 @@ class wav {
 
                 // tmpData = addElement(tmpData, (short)rez);
                 tmpData[x] = (short) rez;
-                
+
                 if (Math.abs(rez) > maxFreq) {
                     maxFreq = Math.abs(rez);
                 }

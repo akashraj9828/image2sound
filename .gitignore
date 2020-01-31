@@ -1,8 +1,12 @@
 *.class
 *.wav
 *.png
+*.jpg
+*.jpeg
+./*
 test*
 out*
 temp*
 .vs*
-.gitignore
+# .gitignore
+gui*

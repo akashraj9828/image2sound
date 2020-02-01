@@ -1,4 +1,4 @@
-
+package akash;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -13,13 +13,18 @@ import java.lang.Math;
 
 import java.util.*;
 
-class img2sound {
+public class img2sound {
 
     public static String img_name;
     public static String audio_name;
     public static int duration = 5;
     public static int factor = 4;
-
+    public img2sound(String img_name_p) {
+        img_name=img_name_p;
+        audio_name = img_name_p.substring(0, img_name_p.lastIndexOf('.'))+" " +duration+"s   density-"+factor+ ".wav";
+        wav obj = new wav(img_name, audio_name, duration, factor);
+        obj.init();
+    }
     public static void main(String[] args) {
         parseArgs(args);
         // print(args[1]);
@@ -30,8 +35,6 @@ class img2sound {
 
     public static void parseArgs(String[] args) {
         int len = args.length;
-        // print(len+"-------");
-        // print(args[0]+"\t"+args[1]+"\t"+args[2]+"\t");
         if (len == 0) {
             showHelp();
         }
@@ -42,7 +45,7 @@ class img2sound {
             }
         }
         try {
-            if (len >2) {
+            if (len > 2) {
                 factor = Integer.parseInt(args[2]);
             }
             if (len > 1) {
@@ -50,7 +53,7 @@ class img2sound {
             }
             if (len > 0) {
                 img_name = args[0];
-                audio_name = args[0].substring(0, args[0].lastIndexOf('.'))+"_" +duration+"s_density-"+factor+ ".wav";
+                audio_name = args[0].substring(0, args[0].lastIndexOf('.'))+" " +duration+"s   density-"+factor+ ".wav";
             }
         } catch (Exception e) {
             showHelp();

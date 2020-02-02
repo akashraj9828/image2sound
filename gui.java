@@ -1,5 +1,21 @@
 
+//Usually you will require both swing and awt packages
+// even if you are working with just swings.
+// FOR GUI
+import javax.swing.*;
+import javax.swing.text.DefaultCaret;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import java.awt.*;
+
 import java.io.File;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.net.URL;
+//
+
+// FOR IMAGE2AUDIO
+
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -13,12 +29,177 @@ import java.lang.Math;
 
 import java.util.*;
 
+// 
+public class gui {
+    public static JFrame frame;
+    public static JMenuBar mb;
+    public static JMenu m1;
+    public static JMenuItem m11;
+    public static JMenuItem m12;
+    public static JPanel control_panel;
+    public static JPanel output_panel;
+    public static JLabel file_l;
+    public static JLabel duration_l;
+    // public static JLabel max_freq_l;
+    public static JLabel density_l;
+    public static JTextField file_tf;
+    public static JTextField duration_tf;
+    public static JTextField density_tf;
+    public static JButton choose;
+    public static JButton start;
+    public static JFileChooser fileChooser;
+    public static JTextArea ta;
+
+    public static JProgressBar progressbar;
+
+    public static void main(String args[]) {
+        // Creating the Frame
+        frame = new JFrame("Image2Sound");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // frame.pack();
+        frame.setSize(600, 600);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        // frame.setLocationByPlatform(true);
+        // frame.setLocation(100, 10);
+
+        // Creating the MenuBar and adding components
+        mb = new JMenuBar();
+
+        m1 = new JMenu("Credits");
+
+        mb.add(m1);
+
+        m11 = new JMenuItem("Website");
+        m11.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                gui.openURL("https://github.com/akashraj9828/image2sound/tree/GUI");
+            }
+        });
+
+        m12 = new JMenuItem("Github");
+        m12.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                gui.openURL("https://github.com/akashraj9828");
+            }
+        });
+
+        m1.add(m11);
+        m1.add(m12);
+
+        // Creating the panel at bottom and adding components
+        control_panel = new JPanel(); // the panel is not visible in output
+
+        file_l = new JLabel("Image:");
+        duration_l = new JLabel("Duration:");
+        density_l = new JLabel("Density:");
+
+        file_tf = new JTextField(10); // accepts upto 10 characters
+        duration_tf = new JTextField(3); // accepts upto 10 characters
+        density_tf = new JTextField(2); // accepts upto 10 characters
+
+        duration_tf.setText("10");
+        density_tf.setText("2");
+        choose = new JButton("Choose image");
+        choose.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                fileChooser = new JFileChooser();
+                // fileChooser.setCurrentDirectory(new File(System.getProperty("user.path")));
+                fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+                // fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Image
+                // files"));
+                fileChooser.setFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
+
+                int result = fileChooser.showOpenDialog(control_panel);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    // System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+                    file_tf.setText(selectedFile.getAbsolutePath());
+                    print("Selected file: " + selectedFile.getAbsolutePath());
+                }
+            }
+        });
+        start = new JButton("Start");
+        start.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                String fname = file_tf.getText();
+                String duration = duration_tf.getText();
+                String density = density_tf.getText();
+                String[] args = { fname, duration, density };
+                // doing it in thread because UI doesnt update when during action listner
+                Thread queryThread = new Thread() {
+                    public void run() {
+                        new img2sound(args);
+                    }
+                };
+                queryThread.start();
+
+                // new img2sound(args);
+            }
+        });
+
+        control_panel.add(file_l); // Components Added using Flow Layout
+        control_panel.add(file_tf);
+        control_panel.add(choose);
+        control_panel.add(duration_l);
+        control_panel.add(duration_tf);
+        control_panel.add(density_l);
+        control_panel.add(density_tf);
+        control_panel.add(start);
+
+        // Text Area at the Center
+        output_panel = new JPanel(); // the panel is not visible in output
+
+        ta = new JTextArea();
+        JScrollPane scrollPane = new JScrollPane(ta);
+
+        DefaultCaret caret = (DefaultCaret) ta.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+
+        frame.getContentPane().add(BorderLayout.NORTH, mb);
+        frame.getContentPane().add(BorderLayout.SOUTH, control_panel);
+        frame.getContentPane().add(BorderLayout.CENTER, scrollPane);
+
+        frame.setVisible(true);
+
+    }
+
+    public static void openURL(String domain) {
+        String url = domain;
+        try {
+            Desktop.getDesktop().browse(new URL(url).toURI());
+        } catch (Exception e) {
+        }
+    }
+
+    public static void print(Object o) {
+        ta.append("\t" + (String) o + "\n");
+    }
+
+}
+
 class img2sound {
 
     public static String img_name;
     public static String audio_name;
     public static int duration = 5;
     public static int factor = 4;
+
+    public img2sound(String[] args) {
+        // img_name = img_name_p;
+        // audio_name = img_name_p.substring(0, img_name_p.lastIndexOf('.')) + " " +
+        // duration + "s density-" + factor
+        // + ".wav";
+        parseArgs(args);
+
+        wav obj = new wav(img_name, audio_name, duration, factor);
+        obj.init();
+    }
 
     public static void main(String[] args) {
         parseArgs(args);
@@ -30,8 +211,6 @@ class img2sound {
 
     public static void parseArgs(String[] args) {
         int len = args.length;
-        // print(len+"-------");
-        // print(args[0]+"\t"+args[1]+"\t"+args[2]+"\t");
         if (len == 0) {
             showHelp();
         }
@@ -42,7 +221,7 @@ class img2sound {
             }
         }
         try {
-            if (len >2) {
+            if (len > 2) {
                 factor = Integer.parseInt(args[2]);
             }
             if (len > 1) {
@@ -50,7 +229,8 @@ class img2sound {
             }
             if (len > 0) {
                 img_name = args[0];
-                audio_name = args[0].substring(0, args[0].lastIndexOf('.'))+"_" +duration+"s_density-"+factor+ ".wav";
+                audio_name = args[0].substring(0, args[0].lastIndexOf('.')) + "_" + duration + "s_density_" + factor
+                        + ".wav";
             }
         } catch (Exception e) {
             showHelp();
@@ -66,11 +246,12 @@ class img2sound {
         print("\t [Density] Default 4, Small numbers make image pixel narrower and sharpen. But, processing takes a long time.");
         print("\t [?,-h,--h,-help,help] To display this help screen");
 
-        System.exit(0);
+        // System.exit(0);
     }
 
     static void print(Object o) {
         System.out.println(o);
+        gui.print(o + "");
     }
 }
 
@@ -141,8 +322,8 @@ class wav {
     }
 
     public void init() {
-        print("Input: "+imgFileName);
-        print("Output: "+fileName);
+        print("Input: " + imgFileName);
+        print("Output: " + fileName);
         processImage();
 
     }
@@ -185,28 +366,31 @@ class wav {
             print("height: " + height);
             print("durationSeconds: " + durationSeconds);
             print("maxSpecFreq: " + maxSpecFreq);
-            print("Factor: " + Factor);
-            print("maxFreq: " + maxFreq);
+            print("Density: " + Factor);
+            // print("maxFreq: " + maxFreq);
             print("sampleRate: " + sampleRate);
             print("channels: " + channels);
             print("numSamples: " + numSamples);
             print("samplesPerPixel: " + samplesPerPixel);
-            print("C: " + C);
-            print("yFactor: " + yFactor);
+            print("\n\n\n");
+            // print("C: " + C);
+            // print("yFactor: " + yFactor);
 
             // loop stats
-            print("out loop x: " + numSamples);
-            print("out loop pixel_x: " + (int) Math.floor(numSamples / samplesPerPixel));
-            print("in loop y: " + height);
+            // print("out loop x: " + numSamples);
+            // print("out loop pixel_x: " + (int) Math.floor(numSamples / samplesPerPixel));
+            // print("in loop y: " + height);
 
             // int x,y;
             for (x = 0; x < numSamples; x++) {
                 double rez = 0;
                 int pixel_x = (int) Math.floor(x / samplesPerPixel);
-
+                // String s="*";
                 if (x % sampleRate == 0) {
-                    print("progress" + (x / sampleRate + 1) + '/' + durationSeconds);
-                    print(pixel_x);
+                    String prog = new String(new char[(x / sampleRate + 1)]).replace("\0", "# ");
+                    String proginv = new String(new char[durationSeconds - (x / sampleRate + 1)]).replace("\0", "- ");
+                    print("Progress " + prog + proginv + (x / sampleRate + 1) + '/' + durationSeconds);
+                    // print(pixel_x);
                 }
 
                 for (y = 0; y < height; y += yFactor) {
@@ -232,13 +416,13 @@ class wav {
 
             }
 
-            print(" : " + tmpData.length);
+            // print(" : " + tmpData.length);
             for (int i = 0; i < tmpData.length; i++) {
                 data2[i] = (short) (32700 * tmpData[i] / maxFreq); // 32767
                 // print(i + "\t"+tmpData[i]+"\t" + data2[i]);
             }
 
-            print("total samples taken:: " + data2.length);
+            // print("total samples taken:: " + data2.length);
             // print("expected samples:: " + SampleRate * seconds+"\n");
             SubChunk2Size = numSamples * channels * (BitsPerSample / 8);
             RawData = data2;
@@ -291,10 +475,7 @@ class wav {
                 }
 
                 byte[] buffer = buff.array();
-                print("Raw data size: " + RawData.length * 2);
-                print("buff size: " + buff.limit());
-                print("Chunk size: " + ChunkSize);
-                print("Output file size: " + (double) (ChunkSize + 4) / 1024 / 1024 + " mb");
+
                 int j = 0;
                 for (int i = 4; i < ChunkSize;) {
                     if (i == 8) {
@@ -315,6 +496,15 @@ class wav {
 
                 rwChannel.close();
 
+                print("\n\n");
+                print("FINISHED!");
+                print("\n\n");
+                // print("Raw data size: " + RawData.length * 2);
+                // print("buff size: " + buff.limit());
+                // print("Chunk size: " + ChunkSize);
+                print("Output file size: " + (double) (ChunkSize + 4) / 1024 / 1024 + " mb");
+                print("Output file : " + fileName);
+
             } catch (IOException exp) {
                 System.err.println("File output stream error : " + exp.getMessage());
             }
@@ -326,5 +516,6 @@ class wav {
 
     public static void print(Object o) {
         System.out.println(o);
+        gui.print(o + "");
     }
 }

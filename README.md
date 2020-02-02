@@ -1,5 +1,8 @@
-# image2sound
+# image2sound v2.0 GUI version
 
+Commandline version can be found in [CLI branch](https://github.com/akashraj9828/image2sound/tree/CLI) 
+
+ ![Input](./output/gui_ss.jpg)
   
 ## TL;DR
 ---
@@ -32,14 +35,14 @@ Happy coding :')
 ---
 ## How to use
 ``` 
-> javac img2sound.java
-> java  img2sound [image name] [seconds] [Density]
+> javac gui.java
+> java  gui
 
-    [image name] png and jpeg supported
-    [seconds] Default 5, Output audio file length in seconds
-    [Density] Default 4, Small numbers make image pixel narrower and sharpen. 
+    [Image] most standard image type supported
+    [Duration] Output audio file duration in seconds
+    [Density] Default 2, Small numbers make image pixel narrower and sharper. 
                 But, processing takes a long time.
-    [?,-h,--h,-help,help] To display this help screen
+                
 ```
 ---
 ## Sample
@@ -55,4 +58,4 @@ Happy coding :')
 
 
 
-# GUI version coming soon :p
+# GUI version

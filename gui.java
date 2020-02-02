@@ -3,6 +3,7 @@
 // even if you are working with just swings.
 // FOR GUI
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.*;
@@ -35,7 +36,8 @@ public class gui {
     public static JMenu m1;
     public static JMenuItem m11;
     public static JMenuItem m12;
-    public static JPanel panel;
+    public static JPanel control_panel;
+    public static JPanel output_panel;
     public static JLabel file_l;
     public static JLabel duration_l;
     // public static JLabel max_freq_l;
@@ -52,7 +54,7 @@ public class gui {
 
     public static void main(String args[]) {
         // Creating the Frame
-        frame = new JFrame("Image2Text");
+        frame = new JFrame("Image2Sound");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // frame.pack();
         frame.setSize(600, 600);
@@ -88,8 +90,9 @@ public class gui {
         m1.add(m12);
 
         // Creating the panel at bottom and adding components
-        panel = new JPanel(); // the panel is not visible in output
-        file_l = new JLabel("File location:");
+        control_panel = new JPanel(); // the panel is not visible in output
+
+        file_l = new JLabel("Image:");
         duration_l = new JLabel("Duration:");
         density_l = new JLabel("Density:");
 
@@ -110,7 +113,7 @@ public class gui {
                 // files"));
                 fileChooser.setFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
 
-                int result = fileChooser.showOpenDialog(panel);
+                int result = fileChooser.showOpenDialog(control_panel);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     File selectedFile = fileChooser.getSelectedFile();
                     // System.out.println("Selected file: " + selectedFile.getAbsolutePath());
@@ -127,28 +130,41 @@ public class gui {
                 String duration = duration_tf.getText();
                 String density = density_tf.getText();
                 String[] args = { fname, duration, density };
-                new img2sound(args);
+                // doing it in thread because UI doesnt update when during action listner
+                Thread queryThread = new Thread() {
+                    public void run() {
+                        new img2sound(args);
+                    }
+                };
+                queryThread.start();
+
+                // new img2sound(args);
             }
         });
 
-        panel.add(file_l); // Components Added using Flow Layout
-        panel.add(file_tf);
-        panel.add(choose);
-        panel.add(duration_l);
-        panel.add(duration_tf);
-        panel.add(density_l);
-        panel.add(density_tf);
-        panel.add(start);
+        control_panel.add(file_l); // Components Added using Flow Layout
+        control_panel.add(file_tf);
+        control_panel.add(choose);
+        control_panel.add(duration_l);
+        control_panel.add(duration_tf);
+        control_panel.add(density_l);
+        control_panel.add(density_tf);
+        control_panel.add(start);
 
         // Text Area at the Center
+        output_panel = new JPanel(); // the panel is not visible in output
 
         ta = new JTextArea();
-        // ta.setEditable(false); // set textArea non-editable
-        // progressbar=new JProgressBar();
-        // Adding Components to the frame.
+        JScrollPane scrollPane = new JScrollPane(ta);
+
+        DefaultCaret caret = (DefaultCaret) ta.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+
         frame.getContentPane().add(BorderLayout.NORTH, mb);
-        frame.getContentPane().add(BorderLayout.NORTH, panel);
-        frame.getContentPane().add(BorderLayout.CENTER, ta);
+        frame.getContentPane().add(BorderLayout.SOUTH, control_panel);
+        frame.getContentPane().add(BorderLayout.CENTER, scrollPane);
+
         frame.setVisible(true);
 
     }
@@ -230,7 +246,7 @@ class img2sound {
         print("\t [Density] Default 4, Small numbers make image pixel narrower and sharpen. But, processing takes a long time.");
         print("\t [?,-h,--h,-help,help] To display this help screen");
 
-        System.exit(0);
+        // System.exit(0);
     }
 
     static void print(Object o) {
@@ -350,28 +366,31 @@ class wav {
             print("height: " + height);
             print("durationSeconds: " + durationSeconds);
             print("maxSpecFreq: " + maxSpecFreq);
-            print("Factor: " + Factor);
-            print("maxFreq: " + maxFreq);
+            print("Density: " + Factor);
+            // print("maxFreq: " + maxFreq);
             print("sampleRate: " + sampleRate);
             print("channels: " + channels);
             print("numSamples: " + numSamples);
             print("samplesPerPixel: " + samplesPerPixel);
-            print("C: " + C);
-            print("yFactor: " + yFactor);
+            print("\n\n\n");
+            // print("C: " + C);
+            // print("yFactor: " + yFactor);
 
             // loop stats
-            print("out loop x: " + numSamples);
-            print("out loop pixel_x: " + (int) Math.floor(numSamples / samplesPerPixel));
-            print("in loop y: " + height);
+            // print("out loop x: " + numSamples);
+            // print("out loop pixel_x: " + (int) Math.floor(numSamples / samplesPerPixel));
+            // print("in loop y: " + height);
 
             // int x,y;
             for (x = 0; x < numSamples; x++) {
                 double rez = 0;
                 int pixel_x = (int) Math.floor(x / samplesPerPixel);
-
+                // String s="*";
                 if (x % sampleRate == 0) {
-                    print("progress" + (x / sampleRate + 1) + '/' + durationSeconds);
-                    print(pixel_x);
+                    String prog = new String(new char[(x / sampleRate + 1)]).replace("\0", "# ");
+                    String proginv = new String(new char[durationSeconds - (x / sampleRate + 1)]).replace("\0", "- ");
+                    print("Progress " + prog + proginv + (x / sampleRate + 1) + '/' + durationSeconds);
+                    // print(pixel_x);
                 }
 
                 for (y = 0; y < height; y += yFactor) {
@@ -397,13 +416,13 @@ class wav {
 
             }
 
-            print(" : " + tmpData.length);
+            // print(" : " + tmpData.length);
             for (int i = 0; i < tmpData.length; i++) {
                 data2[i] = (short) (32700 * tmpData[i] / maxFreq); // 32767
                 // print(i + "\t"+tmpData[i]+"\t" + data2[i]);
             }
 
-            print("total samples taken:: " + data2.length);
+            // print("total samples taken:: " + data2.length);
             // print("expected samples:: " + SampleRate * seconds+"\n");
             SubChunk2Size = numSamples * channels * (BitsPerSample / 8);
             RawData = data2;
@@ -456,10 +475,7 @@ class wav {
                 }
 
                 byte[] buffer = buff.array();
-                print("Raw data size: " + RawData.length * 2);
-                print("buff size: " + buff.limit());
-                print("Chunk size: " + ChunkSize);
-                print("Output file size: " + (double) (ChunkSize + 4) / 1024 / 1024 + " mb");
+
                 int j = 0;
                 for (int i = 4; i < ChunkSize;) {
                     if (i == 8) {
@@ -479,6 +495,15 @@ class wav {
                 }
 
                 rwChannel.close();
+
+                print("\n\n");
+                print("FINISHED!");
+                print("\n\n");
+                // print("Raw data size: " + RawData.length * 2);
+                // print("buff size: " + buff.limit());
+                // print("Chunk size: " + ChunkSize);
+                print("Output file size: " + (double) (ChunkSize + 4) / 1024 / 1024 + " mb");
+                print("Output file : " + fileName);
 
             } catch (IOException exp) {
                 System.err.println("File output stream error : " + exp.getMessage());

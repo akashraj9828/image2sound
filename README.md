@@ -1,5 +1,8 @@
 # image2sound v2.0 GUI version
 
+Commandline version can be found in [CLI branch](https://github.com/akashraj9828/image2sound/tree/CLI) 
+
+ ![Input](./output/gui_ss.jpg)
   
 ## TL;DR
 ---
